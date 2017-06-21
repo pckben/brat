@@ -2044,6 +2044,10 @@ var AnnotatorUI = (function($, window, undefined) {
         }
       };
 
+      var entityTypesUpdated = function() {
+        window.location.reload(false);
+      }
+
       var rememberSpanSettings = function(response) {
         spanKeymap = {};
 
@@ -2811,6 +2815,7 @@ var AnnotatorUI = (function($, window, undefined) {
           on('collectionLoaded', rememberSpanSettings).
           on('collectionLoaded', setupTaggerUI).
           on('collectionLoaded', setupNormalizationUI).
+          on('entityTypesUpdated', entityTypesUpdated).
           on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
           on('newSourceData', onNewSourceData).
           on('showForm', showForm).

@@ -297,7 +297,7 @@ div.scroll_wrapper_upper div.scroller {
   overflow: hidden;
 }
 #document_name {
-  margin-right: 100px;
+  margin-right: 200px;
 }
 #document_name input {
   width: 100%;
@@ -314,7 +314,7 @@ div.scroll_wrapper_upper div.scroller {
 */
 
 .logo {
-  font-family: 'Astloch', serif;
+  font-family: serif;
   font-style: normal;
   text-decoration: none;
   text-transform: none;

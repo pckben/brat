@@ -1415,6 +1415,73 @@ var VisualizerUI = (function($, window, undefined) {
 
       /* END data dialog - related */
 
+      /* START config dialog - related */
+
+      var activeConfigTab = function() {
+        // activeTab: 0 = Entity, 2 = Event, 3 = Relation
+        var activeTab = $('#config_tabs').tabs('option', 'active');
+        return ['createEntity', 'createEvent', 'createRelation'][activeTab];
+      }
+
+      var onConfigTabSelect = function() {
+        var action = activeConfigTab();
+        switch (action) {
+          case 'createEntity':
+            $('#config_form_entity_name').focus().select();
+            break;
+          case 'createEvent':
+            $('#config_form_event_trigger').focus().select();
+            break;
+          case 'createRelation':
+            $('#config_form_relation_type').focus().select();
+            break;
+        }
+      };
+
+      $('#config_tabs').tabs({
+        show: onConfigTabSelect
+      });
+      
+      var configDialog = $('#config_dialog');
+      var configDialogSubmit = function(evt) {
+        var action = activeConfigTab();
+        var opts = {
+          action: action,
+          collection: coll,
+        };
+        switch (action) {
+          case 'createEntity':
+            opts.name = $('#config_form_entity_name').val() || '';
+            if (!opts.name.length) {
+              dispatcher.post('messages', [[['Please fill in the entity name to be created', 'comment']]]);
+              return false;
+            }
+            break;
+          case 'createEvent':
+            break;
+          case 'createRelation':
+            break;
+        }
+        dispatcher.post('hideForm');
+        dispatcher.post('ajax', [opts, function(response) {
+          if (response && response.items && response.items.length == 0) {
+            dispatcher.post('messages', [[['Oops, something went wrong!', 'comment']]]);
+          }
+          else {
+            // TODO: reload page?
+            dispatcher.post('entityTypesUpdated');
+          }
+        }]);
+        return false;
+      }
+      configDialog.submit(configDialogSubmit);
+      initForm(configDialog);
+
+      $('#config_button').click(function() {
+          dispatcher.post('showForm', [configDialog]);
+        });
+
+      /* END config dialog - related */
 
       /* START options dialog - related */
 

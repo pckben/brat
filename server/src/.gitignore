@@ -1,2 +1,5 @@
 # PLY output
 parser.out
+
+# server credentials
+data_config.py

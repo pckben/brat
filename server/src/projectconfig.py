@@ -17,6 +17,8 @@ import re
 import robotparser # TODO reduce scope
 import urlparse # TODO reduce scope
 import sys
+import json
+from data import Collection, Entity, Relation, Event, EventRole, Attribute
 
 from annotation import open_textfile
 from message import Messager
@@ -377,6 +379,34 @@ class TypeHierarchyNode:
         """
         return self.special_arguments.get('<NORM>', [])
 
+def get_collection_path(path):
+    return path.split('../data')[-1].rstrip('/') 
+
+def __type_hierarchy_from_db_entity(entity):
+    return TypeHierarchyNode([entity.name])
+
+def __make_arg(key, value, specs=''):
+    return '%s%s:%s' % (key, specs, value)
+
+def __type_hierarchy_from_db_relation(relation):
+    args = [
+            __make_arg(relation.role1, relation.type1),
+            __make_arg(relation.role2, relation.type2)
+            ]
+    if relation.reltype != '':
+        args.append(__make_arg('<REL-TYPE>', relation.reltype))
+    return TypeHierarchyNode([relation.name], args)
+
+def __type_hierarchy_from_db_event(event):
+    args = []
+    for role in event.roles.get():
+        args.append(__make_arg(role.name, role.type, role.specs))
+    return TypeHierarchyNode([event.name], args)
+
+def __type_hierarchy_from_db_attribute(attribute):
+    args = [__make_arg(attribute.rtype, attribute.value)]
+    return TypeHierarchyNode([attribute.name], args)
+
 def __require_tab_separator(section):
     """    
     Given a section name, returns True iff in that section of the
@@ -601,6 +631,34 @@ def __parse_configs(configstr, source, expected_sections, optional_sections):
 
     return (configs, section_labels)
             
+def get_configs_from_db(directory):
+    directory = get_collection_path(directory)
+    entity_nodes = []
+    relation_nodes = []
+    event_nodes = []
+    attribute_nodes = []
+    try:
+        collection = Collection.filter(path=directory).get()
+        for entity in collection.entities.select():
+            entity_node = __type_hierarchy_from_db_entity(entity)
+            entity_nodes.append(entity_node)
+    except:
+        return None
+    configs = {
+        ENTITY_SECTION: entity_nodes,
+        RELATION_SECTION: relation_nodes,
+        EVENT_SECTION: event_nodes,
+        ATTRIBUTE_SECTION: attribute_nodes
+    }
+    section_labels = {
+        ENTITY_SECTION: ENTITY_SECTION,
+        RELATION_SECTION: RELATION_SECTION,
+        EVENT_SECTION: EVENT_SECTION,
+        ATTRIBUTE_SECTION: ATTRIBUTE_SECTION
+    }
+    return (configs, section_labels)
+
+
 def get_configs(directory, filename, defaultstr, minconf, sections, optional_sections):
     if (directory, filename) not in get_configs.__cache:
         configstr, source =  __read_first_in_directory_tree(directory, filename)
@@ -681,6 +739,9 @@ __minimal_configuration = {
     }
 
 def get_annotation_configs(directory):
+    configs = get_configs_from_db(directory)
+    if configs:
+        return configs
     return get_configs(directory, 
                        __annotation_config_filename, 
                        __default_configuration,
